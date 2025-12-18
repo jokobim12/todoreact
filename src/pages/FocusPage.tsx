@@ -1,41 +1,69 @@
-import { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, Coffee, BrainCircuit } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Play, Pause, RotateCcw, Coffee, BrainCircuit, ArrowLeft } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useTodoStore } from '../store/useStore';
 
 export function FocusPage() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const taskId = searchParams.get('taskId');
+  const { todos, updateTodoTime } = useTodoStore();
+  
+  const currentTask = todos.find(t => t.id === taskId);
+  
   const [mode, setMode] = useState<'focus' | 'rest'>('focus');
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes
   const [isActive, setIsActive] = useState(false);
+  const startTimeRef = useRef<number | null>(null);
 
   const FOCUS_TIME = 25 * 60;
   const REST_TIME = 5 * 60;
 
+  // Sync time to store when pausing or stopping
   useEffect(() => {
     let interval: any = null;
 
     if (isActive && timeLeft > 0) {
+      startTimeRef.current = Date.now();
       interval = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
+        setTimeLeft((prev) => {
+            if (prev <= 1) {
+                // Timer finished
+                setIsActive(false);
+                const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); 
+                audio.play().catch(e => console.log('Audio error:', e));
+                
+                if (mode === 'focus') {
+                    // Save the last chunk of time
+                     if (taskId && currentTask) {
+                        updateTodoTime(taskId, 1); 
+                     }
+                    alert('Waktu fokus selesai! Saatnya istirahat sebentar.');
+                    setMode('rest');
+                    setTimeLeft(REST_TIME);
+                } else {
+                    alert('Istirahat selesai! Kembali fokus yuk.');
+                    setMode('focus');
+                    setTimeLeft(FOCUS_TIME);
+                }
+                return 0;
+            }
+            
+            // Increment task time every second if in focus mode
+            if (taskId && mode === 'focus') {
+                updateTodoTime(taskId, 1);
+            }
+            
+            return prev - 1;
+        });
       }, 1000);
-    } else if (timeLeft === 0) {
-      setIsActive(false);
-      // Play Alarm
-      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // Simple beep
-      audio.play().catch(e => console.log('Audio error:', e));
-      
-      if (mode === 'focus') {
-          alert('Waktu fokus selesai! Saatnya istirahat sebentar.');
-          setMode('rest');
-          setTimeLeft(REST_TIME);
-      } else {
-          alert('Istirahat selesai! Kembali fokus yuk.');
-          setMode('focus');
-          setTimeLeft(FOCUS_TIME);
-      }
+    } else {
+        startTimeRef.current = null;
     }
 
     return () => clearInterval(interval);
-  }, [isActive, timeLeft, mode]);
+  }, [isActive, timeLeft, mode, taskId]);
 
   const toggleTimer = () => setIsActive(!isActive);
 
@@ -55,16 +83,38 @@ export function FocusPage() {
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+  
+  const formatTotalTime = (seconds: number) => {
+      const hours = Math.floor(seconds / 3600);
+      const mins = Math.floor((seconds % 3600) / 60);
+      if (hours > 0) return `${hours}j ${mins}m`;
+      return `${mins}m`;
+  };
 
   // Calculate progress for circle
   const totalTime = mode === 'focus' ? FOCUS_TIME : REST_TIME;
   const progress = ((totalTime - timeLeft) / totalTime) * 100;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-slate-800">Mode Fokus & Istirahat</h1>
-        <p className="text-slate-500 text-sm">Gunakan teknik Pomodoro untuk produktivitas maksimal.</p>
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8 relative">
+       {/* Back Button */}
+       <button 
+        onClick={() => navigate('/tasks')}
+        className="absolute top-0 left-0 flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors"
+       >
+           <ArrowLeft className="w-5 h-5" />
+           <span className="text-sm font-medium">Kembali</span>
+       </button>
+       
+      <div className="space-y-2 max-w-md mx-auto">
+        <h1 className="text-2xl font-bold text-slate-800">
+            {currentTask ? `Fokus: ${currentTask.title}` : 'Mode Fokus & Istirahat'}
+        </h1>
+        <p className="text-slate-500 text-sm">
+            {currentTask 
+                ? `Total waktu fokus: ${formatTotalTime(currentTask.timeSpent || 0)}` 
+                : 'Gunakan teknik Pomodoro untuk produktivitas maksimal.'}
+        </p>
       </div>
 
       <div className="flex bg-slate-100 p-1 rounded-xl">

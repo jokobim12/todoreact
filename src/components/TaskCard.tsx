@@ -1,4 +1,4 @@
-import { Trash2, Check, Clock, Edit2, Calendar } from 'lucide-react';
+import { Trash2, Check, Clock, Edit2, Calendar, Play } from 'lucide-react';
 import { type Todo } from '../store/useStore';
 import { cn } from '../lib/utils';
 import { useState } from 'react';
@@ -148,7 +148,7 @@ export function TaskCard({ todo, onToggle, onDelete, onEdit }: TaskCardProps) {
                        {todo.description}
                    </p>
                 )}
-                 <div className="flex items-center gap-3 mt-1.5 ml-3.5">
+                 <div className="flex items-center gap-3 mt-1.5 ml-3.5 flex-wrap">
                     {/* Timestamp */}
                     <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3 text-slate-400" />
@@ -166,6 +166,15 @@ export function TaskCard({ todo, onToggle, onDelete, onEdit }: TaskCardProps) {
                             </span>
                         </div>
                     )}
+
+                    {/* Time Spent */}
+                    {todo.timeSpent ? (
+                        <div className="flex items-center gap-1" title="Waktu Fokus">
+                            <span className="text-[10px] text-blue-500 font-medium bg-blue-50 px-1.5 rounded-md">
+                                ⏱️ {Math.floor(todo.timeSpent / 3600) > 0 ? `${Math.floor(todo.timeSpent / 3600)}j ` : ''}{Math.floor((todo.timeSpent % 3600) / 60)}m
+                            </span>
+                        </div>
+                    ) : null}
                 </div>
             </div>
           )}
@@ -173,6 +182,15 @@ export function TaskCard({ todo, onToggle, onDelete, onEdit }: TaskCardProps) {
 
         {!isEditing && (
             <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+            {!todo.completed && (
+                 <a
+                    href={`#/focus?taskId=${todo.id}`}
+                    className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
+                    title="Mulai Fokus"
+                 >
+                    <Play className="w-4 h-4" />
+                 </a>
+            )}
             <button
                 onClick={() => {
                     setIsEditing(true);

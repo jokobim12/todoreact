@@ -13,6 +13,7 @@ export interface Todo {
   deadline?: number;
   priority: 'high' | 'medium' | 'low';
   remindersSent: Record<string, boolean>; // e.g., { '2d': true, '1h': false }
+  timeSpent?: number; // in seconds
   completed: boolean;
   createdAt: number;
 }
@@ -24,6 +25,7 @@ interface TodoState {
   toggleTodo: (id: string) => void;
   deleteTodo: (id: string) => void;
   editTodo: (id: string, newTitle: string, newDescription?: string, newDeadline?: number, newPriority?: 'high' | 'medium' | 'low') => void;
+  updateTodoTime: (id: string, timeToAdd: number) => void;
   deleteAll: () => void;
   updateSettings: (settings: ReminderSettings) => void;
   markReminderSent: (todoId: string, reminderKey: string) => void;
@@ -46,6 +48,7 @@ export const useTodoStore = create<TodoState>()(
             deadline,
             priority,
             remindersSent: {},
+            timeSpent: 0,
             completed: false,
             createdAt: Date.now(),
           },
@@ -70,6 +73,11 @@ export const useTodoStore = create<TodoState>()(
                 priority: newPriority || t.priority || 'medium',
                 remindersSent: newDeadline !== t.deadline ? {} : t.remindersSent 
             } : t
+        )
+      })),
+      updateTodoTime: (id: string, timeToAdd: number) => set((state: TodoState) => ({
+        todos: state.todos.map((t) =>
+          t.id === id ? { ...t, timeSpent: (t.timeSpent || 0) + timeToAdd } : t
         )
       })),
       deleteAll: () => set({ todos: [] }),
