@@ -120,7 +120,7 @@ export function TodoList() {
                     <button className="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-blue-600 transition-colors">
                         <ArrowUpDown className="w-5 h-5" />
                     </button>
-                     <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-xl border border-slate-100 p-1 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 transform origin-top-right">
+                     <div className="absolute left-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 p-1 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 transform origin-top-left">
                         {(['smart', 'newest', 'oldest'] as SortType[]).map((s) => (
                             <button
                                 key={s}
@@ -149,7 +149,7 @@ export function TodoList() {
                   <Filter className="w-5 h-5" />
                </button>
                {/* Simple Dropdown for filter */}
-               <div className="absolute right-0 top-full mt-2 w-32 bg-white rounded-xl shadow-xl border border-slate-100 p-1 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 transform origin-top-right">
+               <div className="absolute right-0 top-full mt-2 w-36 bg-white rounded-xl shadow-xl border border-slate-100 p-1 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 transform origin-top-right z-30">
                   {(['all', 'active', 'completed'] as FilterType[]).map((f) => (
                       <button
                         key={f}

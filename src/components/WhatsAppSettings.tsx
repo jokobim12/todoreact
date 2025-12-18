@@ -19,7 +19,7 @@ export function WhatsAppSettings() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 left-4 p-3 bg-white border border-slate-200 rounded-full shadow-lg text-slate-500 hover:text-emerald-600 hover:scale-110 transition-all z-40"
+        className="fixed bottom-24 left-4 md:bottom-4 md:left-4 p-3 bg-white border border-slate-200 rounded-full shadow-lg text-slate-500 hover:text-emerald-600 hover:scale-110 transition-all z-40"
         title="Pengaturan WhatsApp"
       >
         <Settings className="w-6 h-6" />
