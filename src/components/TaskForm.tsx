@@ -1,28 +1,37 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '../lib/utils';
 
 interface TaskFormProps {
-  onAdd: (title: string, description?: string, deadline?: number) => void;
+  onAdd: (title: string, description?: string, deadline?: number, priority?: 'high' | 'medium' | 'low') => void;
 }
 
 export function TaskForm({ onAdd }: TaskFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState('');
+  const [priority, setPriority] = useState<'high' | 'medium' | 'low'>('medium');
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (title.trim()) {
       const deadlineTimestamp = deadline ? new Date(deadline).getTime() : undefined;
-      onAdd(title, description.trim() || undefined, deadlineTimestamp);
+      onAdd(title, description.trim() || undefined, deadlineTimestamp, priority);
       setTitle('');
       setDescription('');
       setDeadline('');
+      setPriority('medium');
       setIsExpanded(false);
     }
   };
+
+  const priorities = [
+      { value: 'high', label: 'Penting', color: 'bg-rose-500', text: 'text-rose-600', border: 'border-rose-200' },
+      { value: 'medium', label: 'Sedang', color: 'bg-amber-500', text: 'text-amber-600', border: 'border-amber-200' },
+      { value: 'low', label: 'Santai', color: 'bg-blue-500', text: 'text-blue-600', border: 'border-blue-200' },
+  ] as const;
 
   return (
     <form onSubmit={handleSubmit} className="mb-6 relative">
@@ -60,14 +69,35 @@ export function TaskForm({ onAdd }: TaskFormProps) {
                             className="w-full text-xs text-slate-600 focus:outline-none resize-none bg-transparent pt-2"
                             rows={2}
                          />
-                         <div className="flex items-center gap-2 border-t border-slate-50 pt-2">
-                            <span className="text-xs text-slate-400">Deadline:</span>
-                            <input 
-                                type="datetime-local"
-                                value={deadline}
-                                onChange={(e) => setDeadline(e.target.value)}
-                                className="text-xs bg-slate-50 border border-slate-200 rounded px-2 py-1 text-slate-600 focus:outline-none focus:border-blue-400"
-                            />
+                         <div className="flex flex-wrap items-center gap-3 border-t border-slate-50 pt-2">
+                             <div className="flex items-center gap-2">
+                                <span className="text-xs text-slate-400">Deadline:</span>
+                                <input 
+                                    type="datetime-local"
+                                    value={deadline}
+                                    onChange={(e) => setDeadline(e.target.value)}
+                                    className="text-xs bg-slate-50 border border-slate-200 rounded px-2 py-1 text-slate-600 focus:outline-none focus:border-blue-400"
+                                />
+                             </div>
+                             <div className="flex items-center gap-2">
+                                <span className="text-xs text-slate-400">Prioritas:</span>
+                                <div className="flex bg-slate-50 rounded-lg p-0.5 border border-slate-200">
+                                    {priorities.map((p) => (
+                                        <button
+                                            key={p.value}
+                                            type="button"
+                                            onClick={() => setPriority(p.value)}
+                                            className={cn(
+                                                "px-2 py-1 rounded text-[10px] font-medium transition-all flex items-center gap-1",
+                                                priority === p.value ? "bg-white shadow-sm text-slate-800" : "text-slate-400 hover:text-slate-600"
+                                            )}
+                                        >
+                                            <div className={cn("w-1.5 h-1.5 rounded-full", p.color)} />
+                                            {p.label}
+                                        </button>
+                                    ))}
+                                </div>
+                             </div>
                          </div>
                     </div>
                 </motion.div>

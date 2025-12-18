@@ -11,6 +11,7 @@ export interface Todo {
   title: string;
   description?: string;
   deadline?: number;
+  priority: 'high' | 'medium' | 'low';
   remindersSent: Record<string, boolean>; // e.g., { '2d': true, '1h': false }
   completed: boolean;
   createdAt: number;
@@ -19,10 +20,10 @@ export interface Todo {
 interface TodoState {
   todos: Todo[];
   settings: ReminderSettings;
-  addTodo: (title: string, description?: string, deadline?: number) => void;
+  addTodo: (title: string, description?: string, deadline?: number, priority?: 'high' | 'medium' | 'low') => void;
   toggleTodo: (id: string) => void;
   deleteTodo: (id: string) => void;
-  editTodo: (id: string, newTitle: string, newDescription?: string, newDeadline?: number) => void;
+  editTodo: (id: string, newTitle: string, newDescription?: string, newDeadline?: number, newPriority?: 'high' | 'medium' | 'low') => void;
   deleteAll: () => void;
   updateSettings: (settings: ReminderSettings) => void;
   markReminderSent: (todoId: string, reminderKey: string) => void;
@@ -36,13 +37,14 @@ export const useTodoStore = create<TodoState>()(
         fonnteToken: '',
         targetPhone: '',
       },
-      addTodo: (title: string, description?: string, deadline?: number) => set((state: TodoState) => ({
+      addTodo: (title: string, description?: string, deadline?: number, priority: 'high' | 'medium' | 'low' = 'medium') => set((state: TodoState) => ({
         todos: [
           {
             id: crypto.randomUUID(),
             title,
             description,
             deadline,
+            priority,
             remindersSent: {},
             completed: false,
             createdAt: Date.now(),
@@ -58,13 +60,14 @@ export const useTodoStore = create<TodoState>()(
       deleteTodo: (id: string) => set((state: TodoState) => ({
         todos: state.todos.filter((t) => t.id !== id),
       })),
-      editTodo: (id: string, newTitle: string, newDescription?: string, newDeadline?: number) => set((state: TodoState) => ({
+      editTodo: (id: string, newTitle: string, newDescription?: string, newDeadline?: number, newPriority?: 'high' | 'medium' | 'low') => set((state: TodoState) => ({
         todos: state.todos.map((t) =>
             t.id === id ? { 
                 ...t, 
                 title: newTitle, 
                 description: newDescription, 
                 deadline: newDeadline,
+                priority: newPriority || t.priority || 'medium',
                 remindersSent: newDeadline !== t.deadline ? {} : t.remindersSent 
             } : t
         )

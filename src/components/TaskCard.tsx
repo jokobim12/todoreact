@@ -7,7 +7,7 @@ interface TaskCardProps {
   todo: Todo;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
-  onEdit: (id: string, newTitle: string, newDescription?: string, newDeadline?: number) => void;
+  onEdit: (id: string, newTitle: string, newDescription?: string, newDeadline?: number, newPriority?: 'high' | 'medium' | 'low') => void;
 }
 
 export function TaskCard({ todo, onToggle, onDelete, onEdit }: TaskCardProps) {
@@ -19,12 +19,14 @@ export function TaskCard({ todo, onToggle, onDelete, onEdit }: TaskCardProps) {
       ? new Date(todo.deadline - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) 
       : ''
   );
+  const [editPriority, setEditPriority] = useState<'high' | 'medium' | 'low'>(todo.priority || 'medium');
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editTitle.trim()) {
         const deadlineTimestamp = editDeadline ? new Date(editDeadline).getTime() : undefined;
-        onEdit(todo.id, editTitle, editDescription.trim() || undefined, deadlineTimestamp);
+        onEdit(todo.id, editTitle, editDescription.trim() || undefined, deadlineTimestamp, editPriority);
         setIsEditing(false);
     }
   };
@@ -44,6 +46,14 @@ export function TaskCard({ todo, onToggle, onDelete, onEdit }: TaskCardProps) {
   };
 
   const status = todo.deadline ? getDeadlineStatus(todo.deadline) : null;
+
+  const priorities = [
+    { value: 'high', label: 'Penting', color: 'bg-rose-500', text: 'text-rose-600', border: 'border-rose-200' },
+    { value: 'medium', label: 'Sedang', color: 'bg-amber-500', text: 'text-amber-600', border: 'border-amber-200' },
+    { value: 'low', label: 'Santai', color: 'bg-blue-500', text: 'text-blue-600', border: 'border-blue-200' },
+  ] as const;
+
+  const priorityConfig = priorities.find(p => p.value === (todo.priority || 'medium')) || priorities[1];
 
   return (
     <div className={cn(
@@ -79,14 +89,28 @@ export function TaskCard({ todo, onToggle, onDelete, onEdit }: TaskCardProps) {
                     rows={2}
                     placeholder="Deskripsi..."
                  />
-                 <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-400">Deadline:</span>
-                    <input 
-                        type="datetime-local"
-                        value={editDeadline}
-                        onChange={(e) => setEditDeadline(e.target.value)}
-                        className="text-xs bg-white border border-blue-300 rounded px-2 py-1 text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
+                 <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1">
+                        <span className="text-xs text-slate-400">Deadline:</span>
+                        <input 
+                            type="datetime-local"
+                            value={editDeadline}
+                            onChange={(e) => setEditDeadline(e.target.value)}
+                            className="text-xs bg-white border border-blue-300 rounded px-2 py-1 text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                    </div>
+                     <div className="flex items-center gap-1">
+                        <span className="text-xs text-slate-400">Prioritas:</span>
+                         <select 
+                            value={editPriority}
+                            onChange={(e) => setEditPriority(e.target.value as any)}
+                            className="text-xs bg-white border border-blue-300 rounded px-2 py-1 text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                         >
+                             {priorities.map(p => (
+                                 <option key={p.value} value={p.value}>{p.label}</option>
+                             ))}
+                         </select>
+                     </div>
                  </div>
                  <div className="flex justify-end gap-2">
                     <button type="button" onClick={() => setIsEditing(false)} className="text-xs text-slate-500 hover:text-slate-800">Batal</button>
@@ -96,12 +120,20 @@ export function TaskCard({ todo, onToggle, onDelete, onEdit }: TaskCardProps) {
           ) : (
              <div className="flex flex-col">
                 <div className="flex justify-between items-start gap-2">
-                    <p className={cn(
-                        "text-sm font-medium transition-all break-words",
-                        todo.completed ? "text-slate-400 line-through" : "text-slate-700"
-                    )}>
-                        {todo.title}
-                    </p>
+                    <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-2">
+                             {/* Priority Badge */}
+                             {!todo.completed && (
+                                <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", priorityConfig.color)} title={`Prioritas: ${priorityConfig.label}`} />
+                             )}
+                            <p className={cn(
+                                "text-sm font-medium transition-all break-words",
+                                todo.completed ? "text-slate-400 line-through" : "text-slate-700"
+                            )}>
+                                {todo.title}
+                            </p>
+                        </div>
+                    </div>
                     {status && (
                         <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium whitespace-nowrap", status.color)}>
                             {status.text}
@@ -110,19 +142,22 @@ export function TaskCard({ todo, onToggle, onDelete, onEdit }: TaskCardProps) {
                 </div>
                 {todo.description && (
                    <p className={cn(
-                       "text-xs mt-1 whitespace-pre-wrap break-words",
+                       "text-xs mt-1 whitespace-pre-wrap break-words ml-3.5",
                         todo.completed ? "text-slate-300" : "text-slate-500"
                    )}>
                        {todo.description}
                    </p>
                 )}
-                 <div className="flex items-center gap-3 mt-1.5">
+                 <div className="flex items-center gap-3 mt-1.5 ml-3.5">
+                    {/* Timestamp */}
                     <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3 text-slate-400" />
                         <span className="text-[10px] text-slate-400">
-                            Dibuat: {new Date(todo.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            {new Date(todo.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </span>
                     </div>
+                    
+                    {/* Deadline info if not showing status badge */}
                     {todo.deadline && !status && (
                         <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3 text-slate-400" />
@@ -147,6 +182,7 @@ export function TaskCard({ todo, onToggle, onDelete, onEdit }: TaskCardProps) {
                         ? new Date(todo.deadline - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) 
                         : ''
                     );
+                    setEditPriority(todo.priority || 'medium');
                 }}
                 className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                 title="Edit"

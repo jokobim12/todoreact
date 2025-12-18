@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ListTodo } from 'lucide-react';
+import { LayoutDashboard, ListTodo, BrainCircuit } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export function Navbar() {
@@ -8,6 +8,7 @@ export function Navbar() {
   const navItems = [
     { path: '/', label: 'Beranda', icon: LayoutDashboard },
     { path: '/tasks', label: 'Daftar Tugas', icon: ListTodo },
+    { path: '/focus', label: 'Fokus', icon: BrainCircuit },
   ];
 
   return (
